@@ -1,44 +1,63 @@
-import sys
-from random import randint
-from PyQt5 import uic  # Импортируем uic
-from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton
+import pygame
+
+FPS = 60
 
 
-class Example(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
+class Board:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.board = [[0] * width for _ in range(height)]
+        self.left = 10
+        self.top = 10
+        self.cell_size = 75
 
-    def initUI(self):
-        self.setGeometry(500, 500, 500, 500)
-        self.btn = QPushButton('ok', self)
-        self.btn.setGeometry(200, 200, 50, 50)
-        self.do_paint = False
-        self.btn.clicked.connect(self.paint)
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
 
-    def paintEvent(self, event):
-        if self.do_paint:
-            qp = QPainter()
-            qp.begin(self)
-            self.draw_flag(qp)
-            qp.end()
-        self.do_paint = False
+    def render(self, screen):
+        grid = [
+            pygame.Rect(x * self.cell_size + self.left, y * self.cell_size + self.top, self.cell_size, self.cell_size)
+            for x in
+            range(self.width) for y in range(self.height)]
+        [pygame.draw.rect(screen, (255, 255, 255), i, 1) for i in grid]
 
-    def paint(self):
-        self.do_paint = True
-        self.update()
+    def get_click(self, mouse_pos):
+        self.on_click(self.get_cell(mouse_pos))
+    def get_cell(self, mouse_pos):
+        if (self.left < mouse_pos[0] < self.width * self.cell_size + self.left
+                and self.top < mouse_pos[1] < self.height * self.cell_size + self.top):
+            col = mouse_pos[0] // (self.cell_size + self.left)
+            row = mouse_pos[1] // (self.cell_size + self.top)
+            return col, row
+        return None
 
-    def draw_flag(self, qp):
-        qp.setBrush(QColor(randint(0, 255), randint(0, 255), randint(0, 255)))
-        zxc = randint(10, 400)
-        x = randint(0, 500)
-        y = randint(0, 500)
-        qp.drawEllipse(x, y, zxc, zxc)
+    def on_click(self, cell_coords):
+        print(cell_coords)
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Example()
-    ex.show()
-    sys.exit(app.exec())
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((500, 500))
+    board = Board(5, 7)
+    board.set_view(100, 100, 50)
+    clock = pygame.time.Clock()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONUP:
+                board.get_click(event.pos)
+        screen.fill((0, 0, 0))
+        board.render(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
